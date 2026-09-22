@@ -1,3 +1,5 @@
+#pragma once
+
 enum NodeState
 {
     EMPTY,
@@ -19,6 +21,6 @@ struct Position
     }
     bool operator!=(const Position &other) const
     {
-        return row != other.row && col != other.col;
+        return !(*this == other);
     }
 };

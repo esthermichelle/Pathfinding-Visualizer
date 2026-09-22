@@ -75,3 +75,13 @@ bool BFS::step(GridModel &model)
 
     return false;
 }
+
+bool BFS::isComplete() const
+{
+    return complete;
+}
+
+bool BFS::isPathFound() const
+{
+    return pathFound;
+}
