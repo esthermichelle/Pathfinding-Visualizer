@@ -22,4 +22,7 @@ private:
 
     bool complete;
     bool pathFound;
+
+    vector<Position> path;
+    void reconstructPath(GridModel &model);
 };
