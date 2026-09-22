@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../Core/Types.hpp"
 #include "Node.hpp"
 #include <vector>
