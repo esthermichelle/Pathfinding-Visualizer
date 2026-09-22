@@ -4,7 +4,8 @@ GridModel::GridModel(int rows, int cols)
 {
     this->rows = rows;
     this->cols = cols;
-        for (int r = 0; r < rows; r++)
+    grid.resize(rows);
+    for (int r = 0; r < rows; r++)
     {
         grid[r].resize(cols);
 
