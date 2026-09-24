@@ -2,27 +2,28 @@
 
 #include "IPathfinder.hpp"
 #include <queue>
+#include <vector>
+
 using namespace std;
 
-class BFS : public IPathfinder
-{
+class BFS : public IPathfinder {
 public:
-    void initialize(GridModel &model, Position start, Position target) override;
-    bool step(GridModel &model) override;
+  void initialize(GridModel &model, Position start, Position target) override;
+  bool step(GridModel &model) override;
 
-    bool isComplete() const override;
-    bool isPathFound() const override;
-    vector<Position> getPath() const override;
+  bool isComplete() const override;
+  bool isPathFound() const override;
+  vector<Position> getPath() const override;
 
 private:
-    queue<Position> frontier; 
+  queue<Position> frontier;
 
-    Position startPos;
-    Position targetPos;
+  Position startPos;
+  Position targetPos;
 
-    bool complete;
-    bool pathFound;
+  bool complete;
+  bool pathFound;
 
-    vector<Position> path;
-    void reconstructPath(GridModel &model);
+  vector<Position> path;
+  void reconstructPath(GridModel &model);
 };
