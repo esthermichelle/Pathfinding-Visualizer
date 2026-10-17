@@ -19,14 +19,71 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(raylib)
 
-add_executable(PathfindingVisualizer
-    src/main.cpp
+# Core library (graphics-independent) for reuse in tests
+add_library(PathfindingCore STATIC
+    src/Grid/GridModel.cpp
+    src/Algorithms/BFS.cpp
+    src/Algorithms/DFS.cpp
+    src/Algorithms/Dijkstra.cpp
+    src/Algorithms/AStar.cpp
+    src/Maze/MazeGenerator.cpp
 )
 
-target_link_libraries(PathfindingVisualizer PRIVATE raylib)
+target_include_directories(PathfindingCore PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/Core
+    ${CMAKE_SOURCE_DIR}/include/Grid
+    ${CMAKE_SOURCE_DIR}/include/Algorithms
+    ${CMAKE_SOURCE_DIR}/include/Maze
+)
+
+if(MSVC)
+    target_compile_options(PathfindingCore PRIVATE /W4)
+else()
+    target_compile_options(PathfindingCore PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+# Main executable
+add_executable(PathfindingVisualizer
+    src/main.cpp
+    src/Rendering/GridRenderer.cpp
+    src/Engine/VisualizerEngine.cpp
+    src/UI/UIManager.cpp
+)
+
+target_include_directories(PathfindingVisualizer PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/Rendering
+    ${CMAKE_SOURCE_DIR}/include/Engine
+    ${CMAKE_SOURCE_DIR}/include/UI
+    ${CMAKE_SOURCE_DIR}/include/Maze
+)
+
+target_link_libraries(PathfindingVisualizer PRIVATE PathfindingCore raylib)
 
 if(MSVC)
     target_compile_options(PathfindingVisualizer PRIVATE /W4)
 else()
     target_compile_options(PathfindingVisualizer PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+# Tests (headless, no Raylib dependency)
+enable_testing()
+
+add_executable(PathfindingTests
+    tests/test_algorithms.cpp
+)
+
+target_include_directories(PathfindingTests PRIVATE
+    ${CMAKE_SOURCE_DIR}/tests
+)
+
+target_link_libraries(PathfindingTests PRIVATE PathfindingCore)
+
+if(MSVC)
+    target_compile_options(PathfindingTests PRIVATE /W4)
+else()
+    target_compile_options(PathfindingTests PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(NAME AlgorithmTests COMMAND PathfindingTests)

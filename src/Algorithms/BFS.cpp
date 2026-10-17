@@ -19,6 +19,14 @@ void BFS::initialize(GridModel &model, Position start, Position target)
     }
 
     frontier.push(startPos);
+
+    if (startPos == targetPos)
+    {
+        complete = true;
+        pathFound = true;
+        path.push_back(startPos);
+        return;
+    }
 }
 
 bool BFS::step(GridModel &model)

@@ -21,8 +21,8 @@ private:
   Position startPos;
   Position targetPos;
 
-  bool complete;
-  bool pathFound;
+  bool complete = false;
+  bool pathFound = false;
 
   vector<Position> path;
   void reconstructPath(GridModel &model);
