@@ -44,10 +44,16 @@ endif()
 # Main executable
 add_executable(PathfindingVisualizer
     src/main.cpp
+    src/Rendering/GridRenderer.cpp
+    src/Engine/VisualizerEngine.cpp
+    src/UI/UIManager.cpp
 )
 
 target_include_directories(PathfindingVisualizer PRIVATE
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/Rendering
+    ${CMAKE_SOURCE_DIR}/include/Engine
+    ${CMAKE_SOURCE_DIR}/include/UI
 )
 
 target_link_libraries(PathfindingVisualizer PRIVATE PathfindingCore raylib)
