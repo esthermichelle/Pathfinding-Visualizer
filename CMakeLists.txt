@@ -63,3 +63,24 @@ if(MSVC)
 else()
     target_compile_options(PathfindingVisualizer PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+# Tests (headless, no Raylib dependency)
+enable_testing()
+
+add_executable(PathfindingTests
+    tests/test_algorithms.cpp
+)
+
+target_include_directories(PathfindingTests PRIVATE
+    ${CMAKE_SOURCE_DIR}/tests
+)
+
+target_link_libraries(PathfindingTests PRIVATE PathfindingCore)
+
+if(MSVC)
+    target_compile_options(PathfindingTests PRIVATE /W4)
+else()
+    target_compile_options(PathfindingTests PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(NAME AlgorithmTests COMMAND PathfindingTests)
