@@ -7,7 +7,10 @@
 class UIManager
 {
 public:
-    UIManager(int panelX, int panelY, int panelWidth, int panelHeight);
+    UIManager(int panelX, int panelY, int panelWidth, int panelHeight, Font font = GetFontDefault());
+
+    void setFont(Font f) { font = f; }
+    Font getFont() const { return font; }
 
     // Draw the UI panel; returns true if any button was clicked
     void draw(const VisualizerEngine &engine) const;
@@ -20,6 +23,7 @@ private:
     int panelY;
     int panelWidth;
     int panelHeight;
+    Font font;
 
     // Button helper
     struct Button
@@ -33,4 +37,6 @@ private:
 
     bool drawButton(const Button &btn) const;
     bool isButtonClicked(const Button &btn) const;
+    void drawText(const char *text, float x, float y, float fontSize, Color color) const;
+    float measureText(const char *text, float fontSize) const;
 };

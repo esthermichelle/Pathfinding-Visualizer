@@ -1,7 +1,7 @@
 #include "GridRenderer.hpp"
 
-GridRenderer::GridRenderer(int offsetX, int offsetY, int cellSize)
-    : offsetX(offsetX), offsetY(offsetY), cellSize(cellSize)
+GridRenderer::GridRenderer(int offsetX, int offsetY, int cellSize, Font font)
+    : offsetX(offsetX), offsetY(offsetY), cellSize(cellSize), font(font)
 {
 }
 
@@ -75,12 +75,13 @@ void GridRenderer::draw(const GridModel &model) const
 
             int x = offsetX + c * cellSize;
             int y = offsetY + r * cellSize;
-            int fontSize = cellSize * 2 / 3;
+            float fontSize = static_cast<float>(cellSize) * 0.55f;
             const char *label = (state == NodeState::START) ? "S" : "T";
-            int tw = MeasureText(label, fontSize);
-            DrawText(label, x + (cellSize - tw) / 2,
-                     y + (cellSize - fontSize) / 2,
-                     fontSize, WHITE);
+            float tw = MeasureTextEx(font, label, fontSize, 0.0f).x;
+            DrawTextEx(font, label,
+                       Vector2{static_cast<float>(x) + (static_cast<float>(cellSize) - tw) / 2.0f,
+                               static_cast<float>(y) + (static_cast<float>(cellSize) - fontSize) / 2.0f},
+                       fontSize, 0.0f, WHITE);
         }
     }
 }

@@ -12,9 +12,19 @@ static const Color TEXT_DARK    = {50, 50, 55, 255};
 static const Color TEXT_DIM     = {140, 140, 150, 255};
 static const Color SEPARATOR    = {225, 225, 230, 255};
 
-UIManager::UIManager(int panelX, int panelY, int panelWidth, int panelHeight)
-    : panelX(panelX), panelY(panelY), panelWidth(panelWidth), panelHeight(panelHeight)
+UIManager::UIManager(int panelX, int panelY, int panelWidth, int panelHeight, Font font)
+    : panelX(panelX), panelY(panelY), panelWidth(panelWidth), panelHeight(panelHeight), font(font)
 {
+}
+
+void UIManager::drawText(const char *text, float x, float y, float fontSize, Color color) const
+{
+    DrawTextEx(font, text, Vector2{x, y}, fontSize, 0.0f, color);
+}
+
+float UIManager::measureText(const char *text, float fontSize) const
+{
+    return MeasureTextEx(font, text, fontSize, 0.0f).x;
 }
 
 bool UIManager::drawButton(const Button &btn) const
@@ -33,11 +43,11 @@ bool UIManager::drawButton(const Button &btn) const
     DrawRectangleLinesEx(btn.rect, 1.0f, btn.enabled ? BTN_BORDER : Color{230, 230, 235, 255});
 
     // Text centered
-    int fontSize = 14;
-    int tw = MeasureText(btn.label, fontSize);
-    int tx = static_cast<int>(btn.rect.x) + (static_cast<int>(btn.rect.width) - tw) / 2;
-    int ty = static_cast<int>(btn.rect.y) + (static_cast<int>(btn.rect.height) - fontSize) / 2;
-    DrawText(btn.label, tx, ty, fontSize, btn.enabled ? btn.textColor : TEXT_DIM);
+    float fontSize = 13.0f;
+    float tw = measureText(btn.label, fontSize);
+    float tx = btn.rect.x + (btn.rect.width - tw) / 2.0f;
+    float ty = btn.rect.y + (btn.rect.height - fontSize) / 2.0f;
+    drawText(btn.label, tx, ty, fontSize, btn.enabled ? btn.textColor : TEXT_DIM);
 
     return hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && btn.enabled;
 }
@@ -70,7 +80,7 @@ void UIManager::draw(const VisualizerEngine &engine) const
     bool isPaused = (engineState == EngineState::PAUSED);
 
     // Section: Algorithms
-    DrawText("Algorithm", x, y, 13, TEXT_DIM);
+    drawText("Algorithm", static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DIM);
     y += 22;
 
     const char *algoNames[] = {"BFS", "DFS", "Dijkstra", "A*"};
@@ -102,7 +112,7 @@ void UIManager::draw(const VisualizerEngine &engine) const
     y += 12;
 
     // Section: Controls
-    DrawText("Controls", x, y, 13, TEXT_DIM);
+    drawText("Controls", static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DIM);
     y += 22;
 
     // Start / Resume
@@ -163,7 +173,7 @@ void UIManager::draw(const VisualizerEngine &engine) const
     y += 12;
 
     // Section: Speed
-    DrawText("Speed", x, y, 13, TEXT_DIM);
+    drawText("Speed", static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DIM);
     y += 22;
 
     {
@@ -182,8 +192,8 @@ void UIManager::draw(const VisualizerEngine &engine) const
 
     char speedText[32];
     snprintf(speedText, sizeof(speedText), "%d steps/frame", engine.getStepsPerFrame());
-    int stw = MeasureText(speedText, 12);
-    DrawText(speedText, x + (btnW - stw) / 2, y, 12, TEXT_DIM);
+    float stw = measureText(speedText, 12.0f);
+    drawText(speedText, static_cast<float>(x) + (static_cast<float>(btnW) - stw) / 2.0f, static_cast<float>(y), 12.0f, TEXT_DIM);
     y += 24;
 
     // Separator
@@ -191,17 +201,17 @@ void UIManager::draw(const VisualizerEngine &engine) const
     y += 12;
 
     // Status
-    DrawText("Status", x, y, 13, TEXT_DIM);
+    drawText("Status", static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DIM);
     y += 20;
-    DrawText(engine.getStatusText().c_str(), x, y, 13, TEXT_DARK);
+    drawText(engine.getStatusText().c_str(), static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DARK);
     y += 28;
 
     // Help
-    DrawText("Left-click: place wall", x, y, 11, TEXT_DIM);
+    drawText("Left-click: place wall", static_cast<float>(x), static_cast<float>(y), 11.0f, TEXT_DIM);
     y += 15;
-    DrawText("Right-click: erase wall", x, y, 11, TEXT_DIM);
+    drawText("Right-click: erase wall", static_cast<float>(x), static_cast<float>(y), 11.0f, TEXT_DIM);
     y += 15;
-    DrawText("Drag S/T to move", x, y, 11, TEXT_DIM);
+    drawText("Drag S/T to move", static_cast<float>(x), static_cast<float>(y), 11.0f, TEXT_DIM);
 }
 
 void UIManager::handleInput(VisualizerEngine &engine)

@@ -6,7 +6,10 @@
 class GridRenderer
 {
 public:
-    GridRenderer(int offsetX, int offsetY, int cellSize);
+    GridRenderer(int offsetX, int offsetY, int cellSize, Font font = GetFontDefault());
+
+    void setFont(Font f) { font = f; }
+    Font getFont() const { return font; }
 
     void draw(const GridModel &model) const;
 
@@ -25,6 +28,7 @@ private:
     int offsetX;
     int offsetY;
     int cellSize;
+    Font font;
 
     Color stateColor(NodeState state) const;
 };
