@@ -26,6 +26,7 @@ add_library(PathfindingCore STATIC
     src/Algorithms/DFS.cpp
     src/Algorithms/Dijkstra.cpp
     src/Algorithms/AStar.cpp
+    src/Maze/MazeGenerator.cpp
 )
 
 target_include_directories(PathfindingCore PUBLIC
@@ -33,6 +34,7 @@ target_include_directories(PathfindingCore PUBLIC
     ${CMAKE_SOURCE_DIR}/include/Core
     ${CMAKE_SOURCE_DIR}/include/Grid
     ${CMAKE_SOURCE_DIR}/include/Algorithms
+    ${CMAKE_SOURCE_DIR}/include/Maze
 )
 
 if(MSVC)
@@ -54,6 +56,7 @@ target_include_directories(PathfindingVisualizer PRIVATE
     ${CMAKE_SOURCE_DIR}/include/Rendering
     ${CMAKE_SOURCE_DIR}/include/Engine
     ${CMAKE_SOURCE_DIR}/include/UI
+    ${CMAKE_SOURCE_DIR}/include/Maze
 )
 
 target_link_libraries(PathfindingVisualizer PRIVATE PathfindingCore raylib)
