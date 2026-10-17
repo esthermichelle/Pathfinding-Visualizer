@@ -3,6 +3,7 @@
 #include "DFS.hpp"
 #include "Dijkstra.hpp"
 #include "AStar.hpp"
+#include "MazeGenerator.hpp"
 #include "raylib.h"
 
 VisualizerEngine::VisualizerEngine(int rows, int cols)
@@ -150,6 +151,16 @@ void VisualizerEngine::resetGrid()
     pathfinder.reset();
     state = EngineState::IDLE;
     statusText = "Grid reset";
+}
+
+void VisualizerEngine::generateMaze()
+{
+    // Stop any running search
+    pathfinder.reset();
+    state = EngineState::IDLE;
+
+    MazeGenerator::generate(grid, startPos, targetPos);
+    statusText = "Maze generated";
 }
 
 void VisualizerEngine::setStepsPerFrame(int spf)

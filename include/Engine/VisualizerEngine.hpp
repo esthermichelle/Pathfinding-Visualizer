@@ -36,6 +36,7 @@ public:
     // Grid operations
     void clearPath();       // Clear visualization but keep walls
     void resetGrid();       // Clear everything
+    void generateMaze();    // Generate a randomized maze
 
     // Endpoint manipulation (for dragging)
     void moveStartTo(Position newPos);
