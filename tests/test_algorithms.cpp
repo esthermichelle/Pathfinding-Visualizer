@@ -5,6 +5,7 @@
 #include "DFS.hpp"
 #include "Dijkstra.hpp"
 #include "AStar.hpp"
+#include "MazeGenerator.hpp"
 #include <algorithm>
 #include <cmath>
 
@@ -271,3 +272,146 @@ ALGO_TEST_SUITE(Dijkstra, Dijkstra, true)
 
 // A*: must find shortest path (CheckShortest = true)
 ALGO_TEST_SUITE(AStar, AStar, true)
+
+// ===== MAZE GENERATOR TESTS =====
+
+TEST_CASE("MazeGenerator: generates walls and open passages")
+{
+    GridModel grid(25, 40);
+    Position start{12, 10};
+    Position target{12, 30};
+
+    MazeGenerator::generate(grid, start, target, 42);
+
+    CHECK(grid.getNodeState(start) == NodeState::START);
+    CHECK(grid.getNodeState(target) == NodeState::TARGET);
+
+    int wallCount = 0;
+    int emptyCount = 0;
+    for (int r = 0; r < grid.getRows(); r++)
+    {
+        for (int c = 0; c < grid.getCols(); c++)
+        {
+            if (grid.getNodeState({r, c}) == NodeState::WALL)
+                wallCount++;
+            else if (grid.getNodeState({r, c}) == NodeState::EMPTY)
+                emptyCount++;
+        }
+    }
+
+    // A valid maze must have a substantial number of both walls and passages
+    CHECK(wallCount > 100);
+    CHECK(emptyCount > 100);
+}
+
+TEST_CASE("MazeGenerator: start and target accessibility with all 4 algorithms")
+{
+    // Test on default visualizer grid size (25x40) with even coordinates
+    GridModel grid(25, 40);
+    Position start{12, 10};
+    Position target{12, 30};
+
+    MazeGenerator::generate(grid, start, target, 12345);
+
+    // BFS
+    {
+        BFS bfs;
+        auto path = runToCompletion(bfs, grid, start, target);
+        CHECK(bfs.isPathFound());
+        CHECK(isContiguousPath(path));
+        CHECK(path.front() == start);
+        CHECK(path.back() == target);
+    }
+
+    // DFS
+    {
+        grid.resetStates();
+        grid.setNodeState(start, NodeState::START);
+        grid.setNodeState(target, NodeState::TARGET);
+        DFS dfs;
+        auto path = runToCompletion(dfs, grid, start, target);
+        CHECK(dfs.isPathFound());
+        CHECK(isContiguousPath(path));
+        CHECK(path.front() == start);
+        CHECK(path.back() == target);
+    }
+
+    // Dijkstra
+    {
+        grid.resetStates();
+        grid.setNodeState(start, NodeState::START);
+        grid.setNodeState(target, NodeState::TARGET);
+        Dijkstra dijkstra;
+        auto path = runToCompletion(dijkstra, grid, start, target);
+        CHECK(dijkstra.isPathFound());
+        CHECK(isContiguousPath(path));
+        CHECK(path.front() == start);
+        CHECK(path.back() == target);
+    }
+
+    // A*
+    {
+        grid.resetStates();
+        grid.setNodeState(start, NodeState::START);
+        grid.setNodeState(target, NodeState::TARGET);
+        AStar astar;
+        auto path = runToCompletion(astar, grid, start, target);
+        CHECK(astar.isPathFound());
+        CHECK(isContiguousPath(path));
+        CHECK(path.front() == start);
+        CHECK(path.back() == target);
+    }
+}
+
+TEST_CASE("MazeGenerator: corner positions are solvable")
+{
+    GridModel grid(15, 15);
+    Position start{0, 0};
+    Position target{14, 14};
+
+    MazeGenerator::generate(grid, start, target, 999);
+
+    BFS bfs;
+    auto path = runToCompletion(bfs, grid, start, target);
+    CHECK(bfs.isPathFound());
+    CHECK(isContiguousPath(path));
+}
+
+TEST_CASE("MazeGenerator: deterministic seeded generation")
+{
+    GridModel grid1(21, 21);
+    GridModel grid2(21, 21);
+    Position start{5, 5};
+    Position target{15, 15};
+
+    MazeGenerator::generate(grid1, start, target, 777);
+    MazeGenerator::generate(grid2, start, target, 777);
+
+    for (int r = 0; r < 21; r++)
+    {
+        for (int c = 0; c < 21; c++)
+        {
+            CHECK(grid1.getNodeState({r, c}) == grid2.getNodeState({r, c}));
+        }
+    }
+
+    // Different seeds produce different mazes
+    GridModel grid3(21, 21);
+    MazeGenerator::generate(grid3, start, target, 888);
+
+    bool anyDifference = false;
+    for (int r = 0; r < 21; r++)
+    {
+        for (int c = 0; c < 21; c++)
+        {
+            if (grid1.getNodeState({r, c}) != grid3.getNodeState({r, c}))
+            {
+                anyDifference = true;
+                break;
+            }
+        }
+        if (anyDifference) break;
+    }
+    CHECK(anyDifference);
+}
+
