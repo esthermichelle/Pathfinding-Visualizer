@@ -12,9 +12,9 @@ static const int GRID_OFFSET_X = 20;
 static const int GRID_OFFSET_Y = 60;
 static const int PANEL_WIDTH = 240;
 
-static const Color BG_COLOR = {30, 30, 46, 255};
-static const Color TITLE_COLOR = {230, 230, 245, 255};
-static const Color SUBTITLE_COLOR = {140, 140, 170, 255};
+static const Color BG_COLOR = WHITE;
+static const Color TITLE_COLOR = {50, 50, 55, 255};
+static const Color SUBTITLE_COLOR = {130, 130, 140, 255};
 
 int main()
 {

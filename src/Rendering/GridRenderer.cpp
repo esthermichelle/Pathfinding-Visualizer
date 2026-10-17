@@ -10,21 +10,21 @@ Color GridRenderer::stateColor(NodeState state) const
     switch (state)
     {
     case NodeState::EMPTY:
-        return Color{44, 47, 68, 255};      // dark slate
+        return WHITE;
     case NodeState::WALL:
-        return Color{20, 20, 35, 255};       // very dark navy
+        return Color{140, 140, 150, 255};    // medium gray
     case NodeState::START:
-        return Color{0, 212, 170, 255};      // mint green
+        return Color{76, 175, 80, 255};      // muted green
     case NodeState::TARGET:
-        return Color{255, 107, 107, 255};    // coral red
+        return Color{211, 78, 78, 255};      // muted red
     case NodeState::FRONTIER:
-        return Color{116, 185, 255, 255};    // sky blue
+        return Color{187, 222, 251, 255};    // pale blue
     case NodeState::VISITED:
-        return Color{162, 155, 254, 255};    // soft purple
+        return Color{207, 216, 220, 255};    // light blue-gray
     case NodeState::PATH:
-        return Color{255, 217, 61, 255};     // golden yellow
+        return Color{255, 202, 40, 255};     // soft amber
     default:
-        return DARKGRAY;
+        return LIGHTGRAY;
     }
 }
 
@@ -33,6 +33,7 @@ void GridRenderer::draw(const GridModel &model) const
     int rows = model.getRows();
     int cols = model.getCols();
 
+    // Draw cell fills
     for (int r = 0; r < rows; r++)
     {
         for (int c = 0; c < cols; c++)
@@ -43,27 +44,43 @@ void GridRenderer::draw(const GridModel &model) const
             NodeState state = model.getNodeState({r, c});
             Color col = stateColor(state);
 
-            DrawRectangle(x, y, cellSize - 1, cellSize - 1, col);
+            DrawRectangle(x, y, cellSize, cellSize, col);
+        }
+    }
 
-            // Draw labels on start/target cells
-            if (state == NodeState::START)
-            {
-                int fontSize = cellSize / 2;
-                const char *label = "S";
-                int tw = MeasureText(label, fontSize);
-                DrawText(label, x + (cellSize - 1 - tw) / 2,
-                         y + (cellSize - 1 - fontSize) / 2,
-                         fontSize, Color{0, 0, 0, 200});
-            }
-            else if (state == NodeState::TARGET)
-            {
-                int fontSize = cellSize / 2;
-                const char *label = "T";
-                int tw = MeasureText(label, fontSize);
-                DrawText(label, x + (cellSize - 1 - tw) / 2,
-                         y + (cellSize - 1 - fontSize) / 2,
-                         fontSize, Color{0, 0, 0, 200});
-            }
+    // Draw grid lines (very light gray)
+    Color gridLine = Color{225, 225, 230, 255};
+    int totalW = cols * cellSize;
+    int totalH = rows * cellSize;
+
+    for (int r = 0; r <= rows; r++)
+    {
+        int y = offsetY + r * cellSize;
+        DrawLine(offsetX, y, offsetX + totalW, y, gridLine);
+    }
+    for (int c = 0; c <= cols; c++)
+    {
+        int x = offsetX + c * cellSize;
+        DrawLine(x, offsetY, x, offsetY + totalH, gridLine);
+    }
+
+    // Draw labels on start/target cells
+    for (int r = 0; r < rows; r++)
+    {
+        for (int c = 0; c < cols; c++)
+        {
+            NodeState state = model.getNodeState({r, c});
+            if (state != NodeState::START && state != NodeState::TARGET)
+                continue;
+
+            int x = offsetX + c * cellSize;
+            int y = offsetY + r * cellSize;
+            int fontSize = cellSize * 2 / 3;
+            const char *label = (state == NodeState::START) ? "S" : "T";
+            int tw = MeasureText(label, fontSize);
+            DrawText(label, x + (cellSize - tw) / 2,
+                     y + (cellSize - fontSize) / 2,
+                     fontSize, WHITE);
         }
     }
 }
