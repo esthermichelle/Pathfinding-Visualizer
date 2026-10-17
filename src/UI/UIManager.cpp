@@ -1,18 +1,16 @@
 #include "UIManager.hpp"
 #include <cstring>
 
-static const Color BG_DARK      = {30, 30, 46, 255};
-static const Color PANEL_BG     = {36, 36, 54, 255};
-static const Color BTN_NORMAL   = {55, 55, 80, 255};
-static const Color BTN_HOVER    = {75, 75, 110, 255};
-static const Color BTN_ACTIVE   = {0, 212, 170, 255};
-static const Color BTN_DISABLED = {40, 40, 55, 255};
-static const Color TEXT_WHITE   = {230, 230, 245, 255};
-static const Color TEXT_DIM     = {140, 140, 170, 255};
-static const Color ACCENT_GREEN = {0, 212, 170, 255};
-static const Color ACCENT_RED   = {255, 107, 107, 255};
-static const Color ACCENT_BLUE  = {116, 185, 255, 255};
-static const Color ACCENT_GOLD  = {255, 217, 61, 255};
+// White theme palette
+static const Color PANEL_BG     = {248, 248, 250, 255};
+static const Color BTN_NORMAL   = WHITE;
+static const Color BTN_HOVER    = {240, 242, 248, 255};
+static const Color BTN_ACTIVE   = {66, 133, 244, 255};   // muted blue accent
+static const Color BTN_DISABLED = {245, 245, 247, 255};
+static const Color BTN_BORDER   = {210, 210, 218, 255};
+static const Color TEXT_DARK    = {50, 50, 55, 255};
+static const Color TEXT_DIM     = {140, 140, 150, 255};
+static const Color SEPARATOR    = {225, 225, 230, 255};
 
 UIManager::UIManager(int panelX, int panelY, int panelWidth, int panelHeight)
     : panelX(panelX), panelY(panelY), panelWidth(panelWidth), panelHeight(panelHeight)
@@ -23,7 +21,6 @@ bool UIManager::drawButton(const Button &btn) const
 {
     Vector2 mouse = GetMousePosition();
     bool hovered = CheckCollisionPointRec(mouse, btn.rect);
-    bool clicked = hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && btn.enabled;
 
     Color bg = btn.bgColor;
     if (!btn.enabled)
@@ -31,17 +28,18 @@ bool UIManager::drawButton(const Button &btn) const
     else if (hovered)
         bg = BTN_HOVER;
 
-    // Rounded button
-    DrawRectangleRounded(btn.rect, 0.3f, 6, bg);
+    // Simple rectangular button with subtle border
+    DrawRectangleRec(btn.rect, bg);
+    DrawRectangleLinesEx(btn.rect, 1.0f, btn.enabled ? BTN_BORDER : Color{230, 230, 235, 255});
 
     // Text centered
-    int fontSize = 16;
+    int fontSize = 14;
     int tw = MeasureText(btn.label, fontSize);
     int tx = static_cast<int>(btn.rect.x) + (static_cast<int>(btn.rect.width) - tw) / 2;
     int ty = static_cast<int>(btn.rect.y) + (static_cast<int>(btn.rect.height) - fontSize) / 2;
     DrawText(btn.label, tx, ty, fontSize, btn.enabled ? btn.textColor : TEXT_DIM);
 
-    return clicked;
+    return hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && btn.enabled;
 }
 
 bool UIManager::isButtonClicked(const Button &btn) const
@@ -55,145 +53,155 @@ void UIManager::draw(const VisualizerEngine &engine) const
 {
     // Panel background
     DrawRectangle(panelX, panelY, panelWidth, panelHeight, PANEL_BG);
-    // Separator line
-    DrawRectangle(panelX, panelY, 2, panelHeight, Color{60, 60, 90, 255});
+    // Left separator
+    DrawRectangle(panelX, panelY, 1, panelHeight, SEPARATOR);
 
-    int x = panelX + 20;
-    int y = panelY + 20;
-    int btnW = panelWidth - 40;
-    int btnH = 36;
-    int gap = 8;
+    int x = panelX + 16;
+    int y = panelY + 16;
+    int btnW = panelWidth - 32;
+    int btnH = 32;
+    int gap = 6;
 
-    // Title
-    DrawText("ALGORITHMS", x, y, 18, ACCENT_GREEN);
-    y += 30;
-
-    // Algorithm buttons
     auto algoType = engine.getSelectedAlgorithm();
     auto engineState = engine.getState();
     bool canSwitch = (engineState == EngineState::IDLE || engineState == EngineState::FINISHED);
+    bool isIdle = canSwitch;
+    bool isRunning = (engineState == EngineState::RUNNING);
+    bool isPaused = (engineState == EngineState::PAUSED);
+
+    // Section: Algorithms
+    DrawText("Algorithm", x, y, 13, TEXT_DIM);
+    y += 22;
 
     const char *algoNames[] = {"BFS", "DFS", "Dijkstra", "A*"};
     AlgorithmType algoTypes[] = {AlgorithmType::BFS, AlgorithmType::DFS,
                                   AlgorithmType::DIJKSTRA, AlgorithmType::ASTAR};
 
+    // 2x2 grid for algorithm buttons
+    int halfW = (btnW - gap) / 2;
     for (int i = 0; i < 4; i++)
     {
         bool isSelected = (algoType == algoTypes[i]);
         Color bg = isSelected ? BTN_ACTIVE : BTN_NORMAL;
-        Color tc = isSelected ? Color{0, 0, 0, 255} : TEXT_WHITE;
+        Color tc = isSelected ? WHITE : TEXT_DARK;
+        int bx = (i % 2 == 0) ? x : x + halfW + gap;
+        int by = y;
 
-        Button btn{{static_cast<float>(x), static_cast<float>(y),
-                     static_cast<float>(btnW), static_cast<float>(btnH)},
+        Button btn{{static_cast<float>(bx), static_cast<float>(by),
+                     static_cast<float>(halfW), static_cast<float>(btnH)},
                     algoNames[i], bg, tc, canSwitch};
         drawButton(btn);
-        y += btnH + gap;
+
+        if (i % 2 == 1)
+            y += btnH + gap;
     }
+    y += 8;
 
     // Separator
-    y += 10;
-    DrawRectangle(x, y, btnW, 1, Color{60, 60, 90, 255});
-    y += 20;
+    DrawRectangle(x, y, btnW, 1, SEPARATOR);
+    y += 12;
 
-    // Control section
-    DrawText("CONTROLS", x, y, 18, ACCENT_BLUE);
-    y += 30;
+    // Section: Controls
+    DrawText("Controls", x, y, 13, TEXT_DIM);
+    y += 22;
 
-    bool isIdle = (engineState == EngineState::IDLE || engineState == EngineState::FINISHED);
-    bool isRunning = (engineState == EngineState::RUNNING);
-    bool isPaused = (engineState == EngineState::PAUSED);
-
-    // Start / Resume button
+    // Start / Resume
     if (isPaused)
     {
         Button btn{{static_cast<float>(x), static_cast<float>(y),
                      static_cast<float>(btnW), static_cast<float>(btnH)},
-                    "Resume", ACCENT_GREEN, Color{0, 0, 0, 255}, true};
+                    "Resume", Color{76, 175, 80, 255}, WHITE, true};
         drawButton(btn);
     }
     else
     {
         Button btn{{static_cast<float>(x), static_cast<float>(y),
                      static_cast<float>(btnW), static_cast<float>(btnH)},
-                    "Start", ACCENT_GREEN, Color{0, 0, 0, 255}, isIdle};
+                    "Start", Color{76, 175, 80, 255}, WHITE, isIdle};
         drawButton(btn);
     }
     y += btnH + gap;
 
-    // Pause button
+    // Pause
     {
         Button btn{{static_cast<float>(x), static_cast<float>(y),
                      static_cast<float>(btnW), static_cast<float>(btnH)},
-                    "Pause", ACCENT_GOLD, Color{0, 0, 0, 255}, isRunning};
+                    "Pause", BTN_NORMAL, TEXT_DARK, isRunning};
         drawButton(btn);
     }
     y += btnH + gap;
 
-    // Clear Path button
+    // Clear Path
     {
         Button btn{{static_cast<float>(x), static_cast<float>(y),
                      static_cast<float>(btnW), static_cast<float>(btnH)},
-                    "Clear Path", BTN_NORMAL, TEXT_WHITE, !isIdle || engineState == EngineState::FINISHED};
+                    "Clear Path", BTN_NORMAL, TEXT_DARK, true};
         drawButton(btn);
     }
     y += btnH + gap;
 
-    // Reset Grid button
+    // Reset Grid
     {
         Button btn{{static_cast<float>(x), static_cast<float>(y),
                      static_cast<float>(btnW), static_cast<float>(btnH)},
-                    "Reset Grid", ACCENT_RED, TEXT_WHITE, true};
+                    "Reset Grid", BTN_NORMAL, TEXT_DARK, true};
         drawButton(btn);
     }
     y += btnH + gap;
+
+    // Generate Maze
+    {
+        Button btn{{static_cast<float>(x), static_cast<float>(y),
+                     static_cast<float>(btnW), static_cast<float>(btnH)},
+                    "Generate Maze", BTN_ACTIVE, WHITE, isIdle};
+        drawButton(btn);
+    }
+    y += btnH + 8;
 
     // Separator
-    y += 10;
-    DrawRectangle(x, y, btnW, 1, Color{60, 60, 90, 255});
-    y += 20;
+    DrawRectangle(x, y, btnW, 1, SEPARATOR);
+    y += 12;
 
-    // Speed controls
-    DrawText("SPEED", x, y, 18, ACCENT_GOLD);
-    y += 30;
+    // Section: Speed
+    DrawText("Speed", x, y, 13, TEXT_DIM);
+    y += 22;
 
-    int halfW = (btnW - gap) / 2;
     {
         Button btn{{static_cast<float>(x), static_cast<float>(y),
                      static_cast<float>(halfW), static_cast<float>(btnH)},
-                    "Slower", BTN_NORMAL, TEXT_WHITE, engine.getStepsPerFrame() > 1};
+                    "- Slower", BTN_NORMAL, TEXT_DARK, engine.getStepsPerFrame() > 1};
         drawButton(btn);
     }
     {
         Button btn{{static_cast<float>(x + halfW + gap), static_cast<float>(y),
                      static_cast<float>(halfW), static_cast<float>(btnH)},
-                    "Faster", BTN_NORMAL, TEXT_WHITE, engine.getStepsPerFrame() < 50};
+                    "+ Faster", BTN_NORMAL, TEXT_DARK, engine.getStepsPerFrame() < 50};
         drawButton(btn);
     }
-    y += btnH + 5;
+    y += btnH + 4;
 
     char speedText[32];
-    snprintf(speedText, sizeof(speedText), "Steps/frame: %d", engine.getStepsPerFrame());
-    DrawText(speedText, x, y, 14, TEXT_DIM);
-    y += 30;
+    snprintf(speedText, sizeof(speedText), "%d steps/frame", engine.getStepsPerFrame());
+    int stw = MeasureText(speedText, 12);
+    DrawText(speedText, x + (btnW - stw) / 2, y, 12, TEXT_DIM);
+    y += 24;
 
     // Separator
-    DrawRectangle(x, y, btnW, 1, Color{60, 60, 90, 255});
-    y += 20;
+    DrawRectangle(x, y, btnW, 1, SEPARATOR);
+    y += 12;
 
     // Status
-    DrawText("STATUS", x, y, 18, TEXT_DIM);
-    y += 25;
-    DrawText(engine.getStatusText().c_str(), x, y, 14, TEXT_WHITE);
-    y += 30;
-
-    // Instructions
-    DrawText("CONTROLS", x, y, 14, TEXT_DIM);
+    DrawText("Status", x, y, 13, TEXT_DIM);
     y += 20;
-    DrawText("Left-click: Wall", x, y, 12, TEXT_DIM);
-    y += 16;
-    DrawText("Right-click: Erase", x, y, 12, TEXT_DIM);
-    y += 16;
-    DrawText("Drag S/T: Move", x, y, 12, TEXT_DIM);
+    DrawText(engine.getStatusText().c_str(), x, y, 13, TEXT_DARK);
+    y += 28;
+
+    // Help
+    DrawText("Left-click: place wall", x, y, 11, TEXT_DIM);
+    y += 15;
+    DrawText("Right-click: erase wall", x, y, 11, TEXT_DIM);
+    y += 15;
+    DrawText("Drag S/T to move", x, y, 11, TEXT_DIM);
 }
 
 void UIManager::handleInput(VisualizerEngine &engine)
@@ -203,32 +211,37 @@ void UIManager::handleInput(VisualizerEngine &engine)
 
     Vector2 mouse = GetMousePosition();
 
-    int x = panelX + 20;
-    int btnW = panelWidth - 40;
-    int btnH = 36;
-    int gap = 8;
-    int y = panelY + 50; // after title
+    int x = panelX + 16;
+    int btnW = panelWidth - 32;
+    int btnH = 32;
+    int gap = 6;
+    int halfW = (btnW - gap) / 2;
+    int y = panelY + 38; // after "Algorithm" label
 
     auto engineState = engine.getState();
     bool canSwitch = (engineState == EngineState::IDLE || engineState == EngineState::FINISHED);
 
-    // Algorithm buttons
+    // Algorithm buttons (2x2 grid)
     AlgorithmType algoTypes[] = {AlgorithmType::BFS, AlgorithmType::DFS,
                                   AlgorithmType::DIJKSTRA, AlgorithmType::ASTAR};
     for (int i = 0; i < 4; i++)
     {
-        Rectangle rect = {static_cast<float>(x), static_cast<float>(y),
-                           static_cast<float>(btnW), static_cast<float>(btnH)};
+        int bx = (i % 2 == 0) ? x : x + halfW + gap;
+        int by = y;
+
+        Rectangle rect = {static_cast<float>(bx), static_cast<float>(by),
+                           static_cast<float>(halfW), static_cast<float>(btnH)};
         if (canSwitch && CheckCollisionPointRec(mouse, rect))
         {
             engine.selectAlgorithm(algoTypes[i]);
             return;
         }
-        y += btnH + gap;
+        if (i % 2 == 1)
+            y += btnH + gap;
     }
 
-    // Skip separator
-    y += 10 + 1 + 20 + 30;
+    // Skip separator + "Controls" label
+    y += 8 + 1 + 12 + 22;
 
     // Start / Resume
     {
@@ -238,7 +251,7 @@ void UIManager::handleInput(VisualizerEngine &engine)
         {
             if (engineState == EngineState::PAUSED)
                 engine.resumeVisualization();
-            else if (engineState == EngineState::IDLE || engineState == EngineState::FINISHED)
+            else if (canSwitch)
                 engine.startVisualization();
             return;
         }
@@ -281,11 +294,22 @@ void UIManager::handleInput(VisualizerEngine &engine)
     }
     y += btnH + gap;
 
-    // Skip separator
-    y += 10 + 1 + 20 + 30;
+    // Generate Maze
+    {
+        Rectangle rect = {static_cast<float>(x), static_cast<float>(y),
+                           static_cast<float>(btnW), static_cast<float>(btnH)};
+        if (canSwitch && CheckCollisionPointRec(mouse, rect))
+        {
+            engine.generateMaze();
+            return;
+        }
+    }
+    y += btnH + 8;
+
+    // Skip separator + "Speed" label
+    y += 1 + 12 + 22;
 
     // Speed buttons
-    int halfW = (btnW - gap) / 2;
     {
         Rectangle rect = {static_cast<float>(x), static_cast<float>(y),
                            static_cast<float>(halfW), static_cast<float>(btnH)};
