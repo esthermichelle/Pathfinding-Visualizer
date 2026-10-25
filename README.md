@@ -1,150 +1,275 @@
 # Pathfinding Visualizer
 
-An interactive 2D pathfinding visualization tool built with **C++17** and **Raylib**, designed with a **clean, minimal, modern white interface**. Watch BFS, DFS, Dijkstra, and A\* explore a grid step-by-step, generate complex procedural mazes, place walls, drag endpoints, and compare algorithms in real time.
+An interactive 2D pathfinding and maze generation visualizer built in **C++17** and **Raylib**, featuring a **clean, minimal, modern white interface**. Watch classic graph search algorithms explore grid environments step-by-step, generate procedural mazes with guaranteed solvability, draw custom wall obstacles, drag start and target endpoints in real time, and compare algorithmic exploration patterns.
 
-![C++17](https://img.shields.io/badge/C%2B%2B-17-blue)
-![Raylib](https://img.shields.io/badge/Raylib-5.5-green)
-![CMake](https://img.shields.io/badge/CMake-3.16%2B-red)
+![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)
+![Raylib 5.5](https://img.shields.io/badge/Raylib-5.5-green.svg)
+![CMake 3.16+](https://img.shields.io/badge/CMake-3.16%2B-red.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+---
+
+## Application Interface
+
+![Pathfinding Visualizer - Main Interface](docs/images/main-interface.png)
+*The clean, minimal white interface: interactive 25×40 grid (left) with real-time controls and status panel (right).*
+
+---
+
+## Overview
+
+The **Pathfinding Visualizer** provides an intuitive, real-time visual representation of how fundamental graph search algorithms traverse 2D grid spaces. Designed with a clean architectural separation between graph logic and rendering, the core pathfinding algorithms run incrementally per frame without blocking the UI thread.
+
+### Key Highlights
+
+- **Real-Time Step-by-Step Visualization**: Configurable execution speeds (1 to 50 steps per frame) allow users to observe subtle differences in node expansion, queue ordering, and heuristic guidance.
+- **Procedural Maze Generation**: Generates complex, organic-looking mazes using an iterative randomized Depth-First Search (recursive backtracker) algorithm, with guaranteed solvability between endpoints.
+- **Interactive Wall Editing & Draggable Endpoints**: Click and drag walls, erase obstacles with right-click, or drag Start (`S`) and Target (`T`) nodes across the grid while the simulation adjusts.
+- **Fully Decoupled Headless Core**: Algorithm and maze logic are isolated in `PathfindingCore`, enabling comprehensive headless unit tests without requiring a window or GPU context.
+
+---
+
+## Visual Demonstrations
+
+### Complete Workflow Demonstration
+
+The following demonstration shows procedural maze generation, algorithm selection, real-time search progression, and final path reconstruction:
+
+![Pathfinding Visualizer - Workflow Demonstration](docs/images/pathfinding-demo.gif)
+
+---
+
+### Algorithm Comparisons
+
+#### 1. Heuristic Search vs. Exhaustive Search: A* vs. Dijkstra
+
+When confronted with an obstacle wall, Dijkstra's algorithm expands radially in all directions, examining many nodes behind the starting position. In contrast, A* leverages the Manhattan distance heuristic to guide its search frontier directly toward the target, significantly reducing the number of explored nodes while still guaranteeing the shortest path.
+
+| Dijkstra's Algorithm (Radial Exploration) | A* Search (Heuristic-Guided Search) |
+| :---: | :---: |
+| ![Dijkstra's Search Visualization](docs/images/dijkstra-visualization.png) | ![A* Search Visualization](docs/images/astar-visualization.png) |
+| *Dijkstra explores uniformly outward; visits numerous nodes before bypassing the wall.* | *A\* focuses exploration forward toward the target, finding the same 21-step path.* |
+
+---
+
+#### 2. Maze Solving: Breadth-First Search (BFS) vs. Depth-First Search (DFS)
+
+On procedural mazes, BFS explores every corridor level-by-level to ensure the optimal, shortest path. DFS dives as deep as possible into each passage before backtracking, producing a meandering, non-optimal path but demonstrating the nature of stack-based exploration.
+
+| Procedural Maze Generation | Breadth-First Search (Optimal Path) | Depth-First Search (Exploratory Path) |
+| :---: | :---: | :---: |
+| ![Maze Generation](docs/images/maze-generation.png) | ![BFS Visualization](docs/images/bfs-visualization.png) | ![DFS Visualization](docs/images/dfs-visualization.png) |
+| *Randomized DFS maze with guaranteed path from Start (S) to Target (T).* | *BFS guarantees the shortest route (153 steps), exploring all branches evenly.* | *DFS finds a solution (151 steps) by wandering deep into corridors.* |
+
+---
+
+## Supported Algorithms
+
+All algorithms operate on a 4-directional grid (North, South, East, West) with uniform step weights ($1.0$).
+
+| Algorithm | Optimality | Data Structure | Time Complexity | Space Complexity | Description |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Breadth-First Search (BFS)** | **Optimal** | `std::queue` | $O(V + E)$ | $O(V)$ | Explores neighbors layer by layer. Guarantees the shortest path on unweighted grids. |
+| **Depth-First Search (DFS)** | **Non-Optimal** | `std::stack` | $O(V + E)$ | $O(V)$ | Follows a branch as deep as possible before backtracking. Finds a valid path, but not the shortest. |
+| **Dijkstra's Algorithm** | **Optimal** | `std::priority_queue` | $O((V + E) \log V)$ | $O(V)$ | Expands nodes in order of cumulative path cost $g(n)$. Guarantees shortest path and handles stale queue entries gracefully. |
+| **A\* Search** | **Optimal** | `std::priority_queue` | $O((V + E) \log V)$ | $O(V)$ | Prioritizes nodes using $f(n) = g(n) + h(n)$, where $h(n)$ is the admissible Manhattan distance heuristic $ | x_1 - x_2 | + | y_1 - y_2 | $. Explores significantly fewer nodes than Dijkstra. |
+
+---
 
 ## Features
 
-- **Four pathfinding algorithms**: BFS, DFS, Dijkstra, A\* (Manhattan heuristic)
-- **Procedural Maze Generator**: Instant randomized DFS (recursive backtracker) mazes with guaranteed solvability
-- **Minimal White Theme**: Clean white background, subtle light-gray grid lines, dark charcoal typography, and restrained blue accents
-- **Step-by-step animation**: Non-blocking incremental visualization at configurable speed (1–50 steps/frame)
-- **Interactive grid**: Left-click to place walls, right-click to erase
-- **Draggable endpoints**: Click and drag Start (S) or Target (T) anywhere on the grid
-- **Full simulation controls**: Start, Pause, Resume, Clear Path, Reset Grid, Generate Maze
-- **Comprehensive test suite**: 43 headless tests (657 assertions) covering correctness, edge cases, shortest-path guarantees, and maze solvability
+- **Four Pathfinding Algorithms**: BFS, DFS, Dijkstra, and A* with polymorphic runtime swapping.
+- **Procedural Maze Generator**: Iterative randomized Depth-First Search backtracker carving corridors with 100% path solvability guarantee.
+- **Clean Minimal Design**:
+  - High-contrast white background (`#FFFFFF`) and soft panel background (`#F8F8FA`).
+  - Subtle grid borders and clean typography using system font integration (Segoe UI / Arial).
+  - Clear visual states:
+    - **Start Node (`S`)**: Muted green (`#4CAF50`)
+    - **Target Node (`T`)**: Muted red (`#D34E4E`)
+    - **Wall Obstacles**: Medium charcoal gray (`#8C8C96`)
+    - **Frontier Nodes**: Pale sky blue (`#BBDEFB`)
+    - **Visited Nodes**: Soft light blue-gray (`#CFD8DC`)
+    - **Final Path**: Soft amber yellow (`#FFCA28`)
+- **Simulation Controls**:
+  - **Start / Pause / Resume**: Full lifecycle control over active visualizations.
+  - **Clear Path**: Clears search history, visited nodes, and paths while preserving placed walls.
+  - **Reset Grid**: Clears all walls and search data back to an empty grid.
+  - **Generate Maze**: Replaces current walls with a fresh procedurally generated maze.
+  - **Speed Adjustment**: Modify simulation pace from 1 step/frame up to 50 steps/frame.
+- **Interactive Mouse Controls**:
+  - Left-click or drag on empty cells to paint walls.
+  - Right-click or drag on wall cells to erase walls.
+  - Left-click and drag Start (`S`) or Target (`T`) cells to reposition endpoints.
+- **Headless Unit Test Suite**: 43 test cases (657 assertions) powered by `doctest` to ensure correctness without GPU dependencies.
 
-## Prerequisites
+---
 
-| Tool | Minimum Version | Notes |
-|------|----------------|-------|
-| C++ compiler | C++17 support | GCC 8+, Clang 7+, MSVC 2017+ |
-| CMake | 3.16+ | Build system |
-| Git | Any | Raylib is fetched via FetchContent |
+## Controls and Usage
 
-**No manual Raylib installation needed** — CMake downloads and builds it automatically via `FetchContent`.
+| Action | Control | Description |
+| :--- | :--- | :--- |
+| **Draw Walls** | `Left-Click` (or drag) | Converts empty cells into solid wall obstacles. |
+| **Erase Walls** | `Right-Click` (or drag) | Clears wall obstacles back to empty cells. |
+| **Move Endpoints** | `Left-Click + Drag` on `S` / `T` | Repositions Start or Target node across the grid. |
+| **Select Algorithm** | Click sidebar buttons | Chooses between **BFS**, **DFS**, **Dijkstra**, or **A\***. |
+| **Start / Resume** | Click **Start** / **Resume** | Begins or resumes the incremental search visualization. |
+| **Pause** | Click **Pause** | Halts simulation progress to inspect current frontier state. |
+| **Clear Path** | Click **Clear Path** | Removes visited/path tiles while keeping existing walls intact. |
+| **Reset Grid** | Click **Reset Grid** | Clears the entire board to default empty state. |
+| **Generate Maze** | Click **Generate Maze** | Carves a new procedural maze across the grid. |
+| **Adjust Speed** | Click **- Slower** / **+ Faster** | Changes simulation speed between 1 and 50 steps per frame. |
+| **Exit** | `Escape` or Window Close | Closes the application. |
 
-### Windows (MSYS2/UCRT64)
+---
 
-```bash
-# Install prerequisites via MSYS2
-pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-make
+## Project Architecture
+
+The codebase separates core pathfinding algorithms, grid data models, and procedural generation from rendering and UI logic:
+
+```
+Pathfinding-Visualizer/
+├── include/
+│   ├── Core/
+│   │   └── Types.hpp            # Enums (NodeState, AlgorithmType, EngineState) & Position struct
+│   ├── Grid/
+│   │   ├── Node.hpp             # Node model (position, costs g/h/f, parent pointer, state)
+│   │   └── GridModel.hpp        # Pure 2D grid matrix and bounds validation
+│   ├── Algorithms/
+│   │   ├── IPathfinder.hpp      # Polymorphic interface (initialize, step, isComplete, getPath)
+│   │   ├── BFS.hpp              # Breadth-First Search implementation
+│   │   ├── DFS.hpp              # Depth-First Search implementation
+│   │   ├── Dijkstra.hpp         # Dijkstra's Algorithm implementation
+│   │   └── AStar.hpp            # A* Search implementation with Manhattan heuristic
+│   ├── Maze/
+│   │   └── MazeGenerator.hpp    # Iterative randomized DFS recursive backtracker
+│   ├── Engine/
+│   │   └── VisualizerEngine.hpp # State machine orchestrating pathfinder execution & speed
+│   ├── Rendering/
+│   │   └── GridRenderer.hpp     # Raylib rendering for grid, cell borders, and labels
+│   └── UI/
+│       └── UIManager.hpp        # Raylib rendering for sidebar buttons, headers, and status
+├── src/                         # Implementations corresponding to include/ headers
+│   ├── Algorithms/
+│   ├── Engine/
+│   ├── Grid/
+│   ├── Maze/
+│   ├── Rendering/
+│   ├── UI/
+│   └── main.cpp                 # Application entry point, window lifecycle, and input loop
+├── tests/
+│   ├── doctest.h                # Header-only unit test framework (doctest v2.4.11)
+│   └── test_algorithms.cpp      # 43 unit tests covering algorithms, edge cases, and mazes
+├── docs/
+│   └── images/                  # Verified application screenshots and GIF demonstrations
+├── CMakeLists.txt               # Build configuration (FetchContent for Raylib 5.5)
+└── README.md                    # Project documentation
 ```
 
-## Build Instructions
+### Key Design Patterns
 
-### Configure and Build
+1. **Strategy Pattern (`IPathfinder`)**: Uniform algorithm contract (`initialize()`, `step()`, `isComplete()`, `isPathFound()`, `getPath()`) enables dynamic swapping at runtime without reallocating grid structures.
+2. **State Machine (`VisualizerEngine`)**: Coordinates transitions between `IDLE`, `RUNNING`, `PAUSED`, and `FINISHED`, safely handling user input and algorithm switching.
+3. **Raylib Decoupling (`PathfindingCore`)**: The core static library compiles independently of Raylib, allowing headless unit tests to run fast and deterministically in continuous integration environments.
+
+---
+
+## Technology Stack
+
+- **Language**: C++17 (standard library containers, algorithms, memory management)
+- **Graphics & Input**: [Raylib 5.5](https://www.raylib.com/) (hardware-accelerated 2D rendering, modern windowing, input polling)
+- **Build System**: [CMake 3.16+](https://cmake.org/) (cross-platform configuration using `FetchContent`)
+- **Unit Testing**: [doctest v2.4.11](https://github.com/doctest/doctest) (lightweight, zero-dependency C++ test framework)
+
+---
+
+## Installation and Build Instructions
+
+### 1. Clone the Repository
 
 ```bash
-# Configure (first time — fetches Raylib, takes a few minutes)
-cmake -S . -B build -G "MinGW Makefiles" \
-  -DCMAKE_C_COMPILER=gcc \
-  -DCMAKE_CXX_COMPILER=g++
+git clone https://github.com/esthermichelle/Pathfinding-Visualizer.git
+cd Pathfinding-Visualizer
+```
 
-# Build
+### 2. Configure and Build
+
+#### Windows (MSYS2 / MinGW UCRT64)
+
+```bash
+# Configure with MinGW Makefiles
+cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+
+# Build executable and test suite
+cmake --build build --config Release
+```
+
+#### Windows (Visual Studio / MSVC)
+
+```bash
+# Configure for Visual Studio
+cmake -S . -B build
+
+# Build Release binary
+cmake --build build --config Release
+```
+
+#### Linux (Ubuntu / Debian)
+
+```bash
+# Install dependencies for Raylib
+sudo apt-get update
+sudo apt-get install -y build-essential cmake git libasound2-dev libx11-dev \
+    libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev
+
+# Configure and build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
+```
 
-# Run the visualizer
+#### macOS
+
+```bash
+# Configure and build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
+
+---
+
+## Running the Application
+
+After building, launch the executable from the project root:
+
+```bash
+# Windows
 ./build/PathfindingVisualizer.exe
+
+# Linux / macOS
+./build/PathfindingVisualizer
 ```
 
-### Run Tests
+### Command-Line Arguments
+
+The executable supports built-in flags for automated captures and initial states:
+
+- `--screenshot <path>`: Renders initial frames, exports a PNG screenshot of the window to `<path>`, and exits cleanly.
+- `--maze`: Pre-generates a procedural maze upon startup.
 
 ```bash
-# Build and run tests
-cmake --build build
-cd build && ctest --output-on-failure
+# Example: Launch directly with a generated maze and export a screenshot
+./build/PathfindingVisualizer.exe --maze --screenshot docs/images/maze-generation.png
+```
 
-# Or run the test executable directly for detailed output
+---
+
+## Running Tests
+
+The test suite runs headlessly without opening any window or requiring GPU hardware:
+
+```bash
+# Run tests using CTest
+ctest --test-dir build --output-on-failure
+
+# Or execute the test binary directly for detailed doctest output
 ./build/PathfindingTests.exe
 ```
-
-## Controls
-
-| Action | Input |
-|--------|-------|
-| Place wall | Left-click on empty cell |
-| Remove wall | Right-click on wall |
-| Drag Start/Target | Left-click and drag S or T |
-| Select algorithm | Click algorithm button in sidebar (BFS, DFS, Dijkstra, A\*) |
-| Start visualization | Click **Start** button |
-| Pause / Resume | Click **Pause** / **Resume** button |
-| Clear path | Click **Clear Path** (clears search, keeps walls) |
-| Reset grid | Click **Reset Grid** (clears everything to empty grid) |
-| Generate maze | Click **Generate Maze** (creates randomized DFS maze) |
-| Adjust speed | Click **- Slower** / **+ Faster** buttons |
-| Quit | Close window or press Escape |
-
-## Algorithms
-
-| Algorithm | Optimal? | Data Structure | Description |
-|-----------|----------|---------------|-------------|
-| **BFS** | ✅ Yes | Queue | Explores level-by-level; guarantees shortest path on unweighted grids |
-| **DFS** | ❌ No | Stack | Explores depth-first; finds *a* path but not necessarily the shortest |
-| **Dijkstra** | ✅ Yes | Priority Queue | Finds shortest path using cumulative cost; handles stale PQ entries |
-| **A\*** | ✅ Yes | Priority Queue | Dijkstra + Manhattan heuristic; optimal and typically explores fewer nodes |
-
-All algorithms operate with **4-directional movement** (up, down, left, right) with **uniform step weights** (1.0).
-
-## Maze Generation
-
-The built-in maze generator employs an **iterative randomized Depth-First Search (recursive backtracker)**:
-- Carves corridors across a subgrid of odd-coordinate cells to create distinct single-cell passages and walls.
-- Uses an explicit `std::stack` to avoid call-stack overflow on large grids.
-- Automatically connects Start and Target nodes to the carved passage network, guaranteeing 100% path solvability between Start and Target regardless of their grid positions.
-- Seeded generation support enables deterministic and reproducible mazes in automated unit tests.
-
-## Architecture
-
-```
-include/
-├── Core/
-│   └── Types.hpp            # NodeState enum, Position struct
-├── Grid/
-│   ├── Node.hpp             # Node with pos, state, parent, costs
-│   └── GridModel.hpp        # Graphics-independent grid data model
-├── Algorithms/
-│   ├── IPathfinder.hpp      # Abstract interface for all algorithms
-│   ├── BFS.hpp
-│   ├── DFS.hpp
-│   ├── Dijkstra.hpp
-│   └── AStar.hpp
-├── Maze/
-│   └── MazeGenerator.hpp    # Procedural maze generator (DFS backtracker)
-├── Rendering/
-│   └── GridRenderer.hpp     # Minimal white theme Raylib grid drawing
-├── Engine/
-│   └── VisualizerEngine.hpp # Algorithm lifecycle, maze triggers & animation controller
-└── UI/
-    └── UIManager.hpp        # Clean white sidebar with buttons, controls & status
-
-src/                         # Corresponding .cpp implementations
-tests/
-├── doctest.h                # doctest v2.4.11 (header-only test framework)
-└── test_algorithms.cpp      # 43 headless algorithm & maze tests (657 assertions)
-```
-
-### Key Design Decisions
-
-- **GridModel and MazeGenerator are Raylib-independent**: Decoupled core logic can be executed and tested headlessly without an active window or GPU.
-- **IPathfinder interface**: Uniform contract (`initialize()`, `step()`, `isComplete()`, `isPathFound()`, `getPath()`) enables polymorphism and hot-swappable algorithms.
-- **Incremental stepping**: Each frame performs a configured number of algorithm steps, keeping animation smooth and UI responsive.
-- **PathfindingCore static library**: Core logic is compiled once into `libPathfindingCore.a` and linked into both `PathfindingVisualizer` and `PathfindingTests`.
-
-## Test Coverage
-
-The test suite covers:
-- ✅ Direct path finding on empty grids
-- ✅ Path finding around complex obstacle arrangements
-- ✅ Unreachable targets (completely enclosed by walls)
-- ✅ Start equals Target edge case
-- ✅ Start position on a wall or outside grid bounds
-- ✅ Single-cell grids and boundary traversals
-- ✅ Repeated runs after state resets
-- ✅ Shortest-path optimality verification for BFS, Dijkstra, and A\*
-- ✅ Maze generation validity (wall and passage generation, non-empty bounds)
-- ✅ Maze solvability across all 4 algorithms (BFS, DFS, Dijkstra, A\*)
-- ✅ Deterministic reproduction of mazes with seeded RNG
