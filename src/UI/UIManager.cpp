@@ -43,7 +43,7 @@ bool UIManager::drawButton(const Button &btn) const
     DrawRectangleLinesEx(btn.rect, 1.0f, btn.enabled ? BTN_BORDER : Color{230, 230, 235, 255});
 
     // Text centered
-    float fontSize = 13.0f;
+    float fontSize = 16.0f;
     float tw = measureText(btn.label, fontSize);
     float tx = btn.rect.x + (btn.rect.width - tw) / 2.0f;
     float ty = btn.rect.y + (btn.rect.height - fontSize) / 2.0f;
@@ -80,7 +80,7 @@ void UIManager::draw(const VisualizerEngine &engine) const
     bool isPaused = (engineState == EngineState::PAUSED);
 
     // Section: Algorithms
-    drawText("Algorithm", static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DIM);
+    drawText("Algorithm", static_cast<float>(x), static_cast<float>(y), 16.0f, TEXT_DIM);
     y += 22;
 
     const char *algoNames[] = {"BFS", "DFS", "Dijkstra", "A*"};
@@ -112,7 +112,7 @@ void UIManager::draw(const VisualizerEngine &engine) const
     y += 12;
 
     // Section: Controls
-    drawText("Controls", static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DIM);
+    drawText("Controls", static_cast<float>(x), static_cast<float>(y), 16.0f, TEXT_DIM);
     y += 22;
 
     // Start / Resume
@@ -173,7 +173,7 @@ void UIManager::draw(const VisualizerEngine &engine) const
     y += 12;
 
     // Section: Speed
-    drawText("Speed", static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DIM);
+    drawText("Speed", static_cast<float>(x), static_cast<float>(y), 16.0f, TEXT_DIM);
     y += 22;
 
     {
@@ -192,8 +192,8 @@ void UIManager::draw(const VisualizerEngine &engine) const
 
     char speedText[32];
     snprintf(speedText, sizeof(speedText), "%d steps/frame", engine.getStepsPerFrame());
-    float stw = measureText(speedText, 12.0f);
-    drawText(speedText, static_cast<float>(x) + (static_cast<float>(btnW) - stw) / 2.0f, static_cast<float>(y), 12.0f, TEXT_DIM);
+    float stw = measureText(speedText, 13.0f);
+    drawText(speedText, static_cast<float>(x) + (static_cast<float>(btnW) - stw) / 2.0f, static_cast<float>(y), 13.0f, TEXT_DIM);
     y += 24;
 
     // Separator
@@ -201,17 +201,42 @@ void UIManager::draw(const VisualizerEngine &engine) const
     y += 12;
 
     // Status
-    drawText("Status", static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DIM);
-    y += 20;
-    drawText(engine.getStatusText().c_str(), static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DARK);
-    y += 28;
+    drawText("Status", static_cast<float>(x), static_cast<float>(y), 16.0f, TEXT_DIM);
+    y += 22;
+
+    const std::string &statusStr = engine.getStatusText();
+    float statusFontSize = 15.0f;
+    float statusW = measureText(statusStr.c_str(), statusFontSize);
+    if (statusW <= static_cast<float>(btnW))
+    {
+        drawText(statusStr.c_str(), static_cast<float>(x), static_cast<float>(y), statusFontSize, TEXT_DARK);
+        y += 26;
+    }
+    else
+    {
+        size_t split = statusStr.rfind(' ', statusStr.length() / 2 + 4);
+        if (split != std::string::npos)
+        {
+            std::string line1 = statusStr.substr(0, split);
+            std::string line2 = statusStr.substr(split + 1);
+            drawText(line1.c_str(), static_cast<float>(x), static_cast<float>(y), statusFontSize, TEXT_DARK);
+            y += static_cast<int>(statusFontSize) + 4;
+            drawText(line2.c_str(), static_cast<float>(x), static_cast<float>(y), statusFontSize, TEXT_DARK);
+            y += static_cast<int>(statusFontSize) + 8;
+        }
+        else
+        {
+            drawText(statusStr.c_str(), static_cast<float>(x), static_cast<float>(y), statusFontSize, TEXT_DARK);
+            y += 26;
+        }
+    }
 
     // Help
-    drawText("Left-click: place wall", static_cast<float>(x), static_cast<float>(y), 11.0f, TEXT_DIM);
-    y += 15;
-    drawText("Right-click: erase wall", static_cast<float>(x), static_cast<float>(y), 11.0f, TEXT_DIM);
-    y += 15;
-    drawText("Drag S/T to move", static_cast<float>(x), static_cast<float>(y), 11.0f, TEXT_DIM);
+    drawText("Left-click: place wall", static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DIM);
+    y += 18;
+    drawText("Right-click: erase wall", static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DIM);
+    y += 18;
+    drawText("Drag S/T to move", static_cast<float>(x), static_cast<float>(y), 13.0f, TEXT_DIM);
 }
 
 void UIManager::handleInput(VisualizerEngine &engine)

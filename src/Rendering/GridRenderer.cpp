@@ -75,7 +75,7 @@ void GridRenderer::draw(const GridModel &model) const
 
             int x = offsetX + c * cellSize;
             int y = offsetY + r * cellSize;
-            float fontSize = static_cast<float>(cellSize) * 0.55f;
+            float fontSize = static_cast<float>(cellSize) * 0.64f;
             const char *label = (state == NodeState::START) ? "S" : "T";
             float tw = MeasureTextEx(font, label, fontSize, 0.0f).x;
             DrawTextEx(font, label,

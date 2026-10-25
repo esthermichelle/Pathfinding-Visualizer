@@ -162,17 +162,17 @@ int main(int argc, char *argv[])
         // Title (clean, plain, minimal font with neutral appearance)
         DrawTextEx(appFont, "Pathfinding Visualizer",
                    Vector2{static_cast<float>(GRID_OFFSET_X), 18.0f},
-                   20.0f, 0.0f, TITLE_COLOR);
+                   24.0f, 0.0f, TITLE_COLOR);
 
         // Subtitle with algorithm info
         const char *algoNames[] = {"BFS", "DFS", "Dijkstra", "A*"};
         int algoIdx = static_cast<int>(engine.getSelectedAlgorithm());
         char subtitle[64];
         snprintf(subtitle, sizeof(subtitle), "Algorithm: %s", algoNames[algoIdx]);
-        float subtitleW = MeasureTextEx(appFont, subtitle, 14.0f, 0.0f).x;
+        float subtitleW = MeasureTextEx(appFont, subtitle, 15.0f, 0.0f).x;
         DrawTextEx(appFont, subtitle,
-                   Vector2{static_cast<float>(GRID_OFFSET_X + renderer.gridPixelWidth(engine.getGrid())) - subtitleW, 22.0f},
-                   14.0f, 0.0f, SUBTITLE_COLOR);
+                   Vector2{static_cast<float>(GRID_OFFSET_X + renderer.gridPixelWidth(engine.getGrid())) - subtitleW, 23.0f},
+                   15.0f, 0.0f, SUBTITLE_COLOR);
 
         // Grid
         renderer.draw(engine.getGrid());
